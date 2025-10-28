@@ -2,10 +2,20 @@
   "name": "Android Devcontainer",
   "dockerFile": "Dockerfile",
   "context": ".",
-  "mounts": [
-    "source=${localWorkspaceFolder}/.android-sdk,target=/opt/android-sdk,type=bind,consistency=cached"
-  ],
   "remoteUser": "vscode",
   "forwardPorts": [5901],
-  "postStartCommand": "/usr/local/bin/start-android.sh"
+  "mounts": [
+    "source=${localWorkspaceFolder}/.android-sdk,target=/opt/android-sdk,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.android-avd,target=/home/vscode/.android/avd,type=bind,consistency=cached"
+  ],
+  "postStartCommand": "/usr/local/bin/start-android.sh",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "vscode-remote.extensionKind": ["workspace"]
+  },
+  "extensions": [
+    "vscjava.vscode-java-pack",
+    "ms-vscode.cpptools",
+    "ms-python.python"
+  ]
 }
