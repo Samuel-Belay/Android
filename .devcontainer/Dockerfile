@@ -1,43 +1,38 @@
-# ==============================
-# Android Emulator Codespace Setup (KDE + Persistent SDK)
-# ==============================
+# ---------- Base image ----------
 FROM ubuntu:22.04
 
-# Install dependencies
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  wget unzip curl git openjdk-11-jdk python3 python3-pip xvfb x11vnc \
-  tigervnc-standalone-server fluxbox dbus-x11 \
-  && rm -rf /var/lib/apt/lists/*
+# ---------- Install dependencies ----------
+RUN apt-get update && apt-get install -y \
+    wget unzip curl git openjdk-11-jdk python3 python3-pip \
+    xvfb x11vnc net-tools lsof socat && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Android SDK
+# ---------- Set environment variables ----------
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
 
-# Create SDK directories
+# ---------- Download Android SDK command-line tools ----------
 RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+WORKDIR $ANDROID_SDK_ROOT
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
+    unzip cmdline-tools.zip -d cmdline-tools/latest && rm cmdline-tools.zip
 
-# Download and install command line tools
-RUN cd $ANDROID_SDK_ROOT/cmdline-tools/latest && \
-    wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip && \
-    unzip cmdline-tools.zip && rm cmdline-tools.zip
+# ---------- Install SDK packages ----------
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platform-tools" \
+               "platforms;android-33" \
+               "system-images;android-33;google_apis;x86_64" \
+               "emulator"
 
-# Accept all licenses in advance
-RUN yes | sdkmanager --licenses || true
+# ---------- Create AVD (Pixel 6) ----------
+RUN echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6"
 
-# Install necessary SDK components (with Google Play system image)
-RUN sdkmanager --install "platform-tools" "emulator" \
-  "platforms;android-33" \
-  "system-images;android-33;google_apis_playstore;x86_64" || true
-
-# Create a default Pixel 4 AVD
-RUN echo "no" | avdmanager create avd -n Pixel_4_API_33_Play -k "system-images;android-33;google_apis_playstore;x86_64" --device pixel_4
-
-# Expose port for VNC access
-EXPOSE 5901
-
-# Copy startup script
-COPY ../start-android.sh /usr/local/bin/start-android.sh
+# ---------- Copy startup script ----------
+COPY start-android.sh /usr/local/bin/start-android.sh
 RUN chmod +x /usr/local/bin/start-android.sh
 
-# Start KDE Plasma with the Android Emulator on container start
+# ---------- Expose emulator VNC port ----------
+EXPOSE 5901
+
+# ---------- Default startup ----------
 CMD ["/usr/local/bin/start-android.sh"]
