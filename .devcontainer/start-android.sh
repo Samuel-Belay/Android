@@ -1,20 +1,29 @@
 #!/bin/bash
-# Start XFCE desktop + VNC + Android emulator
+set -e
 
-# VNC setup
-export DISPLAY=:1
-vncserver $DISPLAY -geometry 1920x1080 -depth 24 -name codespace-desktop
+echo "=== Starting Android Emulator GUI ==="
 
-# Start XFCE in background
-startxfce4 &
+# If AVD does not exist, create it
+if [ ! -d "$ANDROID_AVD_HOME/pixel6.avd" ]; then
+    echo "Creating Pixel 6 AVD..."
+    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86" -d "pixel_6" --force
+fi
 
-# Give some time for desktop to start
-sleep 5
+# Start X virtual framebuffer (for GUI)
+Xvfb :0 -screen 0 1080x1920x24 &
+export DISPLAY=:0
 
-# Launch Pixel 6 emulator
-emulator -avd pixel6 -gpu swiftshader_indirect -no-snapshot-load &
+# Start emulator with GUI
+$ANDROID_SDK_ROOT/emulator/emulator \
+    -avd pixel6 \
+    -gpu swiftshader_indirect \
+    -no-snapshot-load \
+    -no-audio &
 
-echo "=== XFCE + Android Emulator started! Connect via VNC port 5901 ==="
+# Start VNC server to view GUI remotely
+x11vnc -display :0 -nopw -forever &
+
+echo "=== Emulator started! Connect via VNC on port 5900 ==="
 
 # Keep container alive
 tail -f /dev/null
