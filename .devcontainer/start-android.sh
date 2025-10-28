@@ -1,17 +1,20 @@
 #!/bin/bash
+set -e
 
-# ---------------------- Start Xvfb ----------------------
-mkdir -p ~/.vnc
-Xvfb :0 -screen 0 1280x720x24 &
-export DISPLAY=:0
+# ---------- Start XFCE in virtual framebuffer ----------
+echo "Starting XFCE4..."
+export DISPLAY=:1
+Xvfb :1 -screen 0 1920x1080x24 &
 
-# ---------------------- Start VNC server ----------------------
-x11vnc -display :0 -forever -shared -nopw &
+# ---------- Start VNC server ----------
+echo "Starting VNC server on :5901..."
+x11vnc -display :1 -forever -nopw -shared &
 
-# ---------------------- Start Android emulator ----------------------
-$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu host -no-snapshot-load &
+# ---------- Start Android Emulator ----------
+echo "Starting Android emulator..."
+$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu swiftshader_indirect -no-snapshot-save &
 
-echo "=== Emulator + VNC started! Connect via VNC port 5900 ==="
+echo "=== Emulator started! Connect via VNC to port 5901 ==="
 
 # Keep container alive
 tail -f /dev/null
