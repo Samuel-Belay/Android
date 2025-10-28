@@ -1,18 +1,41 @@
 {
-  "name": "Android Codespace",
-  "build": {
-    "dockerfile": "Dockerfile-with-features"
-  },
-  "runArgs": [
-    "--cap-add=SYS_PTRACE",
-    "--device=/dev/kvm",
-    "--network=host"
-  ],
-  "mounts": [
-    "source=${localWorkspaceFolder}/.android-sdk,target=/opt/android-sdk,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/.android-avd,target=/home/vscode/.android/avd,type=bind,consistency=cached"
-  ],
-  "remoteUser": "vscode",
-  "workspaceFolder": "/workspace",
-  "postStartCommand": "/usr/local/bin/start-android.sh"
+    "name": "Android DevContainer",
+    "build": {
+        "dockerfile": "Dockerfile-with-features",
+        "context": ".",
+        "args": {
+            "USERNAME": "vscode",
+            "USER_UID": "1000",
+            "USER_GID": "1000"
+        }
+    },
+    "runArgs": [
+        "--cap-add=sys_nice",
+        "--network=host"
+    ],
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder}/.android/avd,target=/workspace/.android/avd,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.android/sdk,target=/opt/android-sdk,type=bind,consistency=cached"
+    ],
+    "remoteUser": "vscode",
+    "extensions": [
+        "ms-vscode.cpptools",
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-android"
+    ],
+    "postCreateCommand": "echo 'DevContainer ready!'",
+    "portsAttributes": {
+        "5901": {
+            "label": "VNC Server",
+            "onAutoForward": "openBrowser"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    }
 }
