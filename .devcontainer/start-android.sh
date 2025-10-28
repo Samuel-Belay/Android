@@ -1,30 +1,22 @@
 #!/bin/bash
-set -e
+echo "=== Starting XFCE desktop + VNC server ==="
 
-echo "=== Android Emulator VM starting ==="
-
-# Create AVD if missing
-if [ ! -d "$ANDROID_AVD_HOME/pixel6.avd" ]; then
-    echo "Creating Pixel 6 AVD..."
-    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86" -d "pixel_6" --force
-fi
-
-# Start XFCE desktop in background
 export DISPLAY=:1
+sudo dbus-uuidgen --ensure
 Xvfb :1 -screen 0 1920x1080x24 &
+sleep 2
 
-# Start VNC server
-vncserver :1 -geometry 1920x1080 -depth 24
-echo "=== VNC Desktop started on port 5901 ==="
+xfce4-session &
+sleep 2
 
-# Launch Android emulator with GUI
-$ANDROID_SDK_ROOT/emulator/emulator \
-    -avd pixel6 \
-    -gpu host \
-    -no-snapshot-load \
-    -no-audio &
+x11vnc -display :1 -nopw -forever -shared &
+sleep 2
 
-echo "=== Emulator started. Connect to VNC to interact ==="
+echo "=== VNC server running on port 5901 ==="
 
-# Keep container alive
+echo "=== Starting Android Emulator: pixel6 ==="
+$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu host -no-snapshot-save &
+
+echo "=== Android Studio ready! Launch with 'studio.sh' inside container ==="
+
 tail -f /dev/null
