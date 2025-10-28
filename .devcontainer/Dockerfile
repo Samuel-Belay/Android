@@ -25,14 +25,15 @@ RUN yes | sdkmanager --licenses && \
                "system-images;android-33;google_apis;x86_64" \
                "emulator"
 
-# Create Pixel 6 AVD non-interactively
 ENV ANDROID_AVD_HOME=/opt/android-sdk/.android/avd
+
 RUN avdmanager create avd \
     --name pixel6 \
     --package "system-images;android-33;google_apis;x86_64" \
     --device "pixel_6" \
+    --abi x86_64 \
     --force
-
+    
 # Copy startup script
 COPY start-android.sh /usr/local/bin/start-android.sh
 RUN chmod +x /usr/local/bin/start-android.sh
