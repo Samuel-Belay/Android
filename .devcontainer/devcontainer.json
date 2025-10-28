@@ -1,29 +1,19 @@
 {
-    "name": "Android Pixel 6 Devcontainer",
+    "name": "Android Pixel 6 Codespace",
     "build": {
         "dockerfile": "Dockerfile",
-        "context": ".."
+        "context": "."
     },
     "customizations": {
         "vscode": {
             "extensions": [
+                "vscode.android-emulator",
                 "ms-vscode.cpptools",
-                "vscjava.vscode-java-pack",
-                "redhat.java",
-                "vadimcn.vscode-lldb",
-                "yzhang.markdown-all-in-one"
+                "ms-vscode.vscode-java-pack"
             ]
         }
     },
-    "runArgs": [
-        "--network=host",
-        "--cap-add=sys_nice"
-    ],
-    "workspaceFolder": "/workspace",
-    "forwardPorts": [5901],
     "remoteUser": "vscode",
     "postStartCommand": "/usr/local/bin/start-android.sh",
-    "mounts": [
-        "source=${localWorkspaceFolder}/.android,target=/home/vscode/.android,type=bind"
-    ]
+    "forwardPorts": [5901]
 }
