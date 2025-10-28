@@ -1,7 +1,16 @@
 {
-  "name": "Android Emulator KDE Codespace",
-  "build": { "dockerfile": "Dockerfile" },
+  "name": "Android Emulator Codespace",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "forwardPorts": [5901],
-  "remoteUser": "vscode",
-  "postStartCommand": "/usr/local/bin/start-android.sh"
+  "runArgs": ["--privileged"],
+  "postCreateCommand": "echo '🧩 Dev container ready. The emulator will start automatically.'",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-androidtools.vscode-android-emulator"]
+    }
+  },
+  "remoteUser": "root"
 }
