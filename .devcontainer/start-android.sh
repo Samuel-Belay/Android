@@ -1,20 +1,21 @@
 #!/bin/bash
 set -e
 
-echo "Starting XFCE desktop on :1..."
+# Start XFCE in background
 export DISPLAY=:1
-export USER_HOME=/home/vscode
+Xvfb :1 -screen 0 1280x720x24 &
+sleep 2
+xfce4-session &
+x11vnc -display :1 -nopw -forever &
 
-# Start VNC server
-if ! pgrep Xtightvnc >/dev/null; then
-    echo "Starting VNC server on display :1..."
-    vncserver :1 -geometry 1920x1080 -depth 24 -nopw
+# Create AVD if missing
+if [ ! -d "$HOME/.android/avd/pixel6.avd" ]; then
+    echo "Creating Pixel 6 AVD..."
+    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6"
 fi
 
-# Start Android emulator
-echo "Starting Pixel 6 emulator..."
-$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu swiftshader_indirect -no-snapshot-load -no-audio &
-
+# Launch emulator
+emulator -avd pixel6 -gpu swiftshader_indirect -no-snapshot-load &
 echo "=== Emulator started! Connect via VNC on port 5901 ==="
 
 # Keep container alive
