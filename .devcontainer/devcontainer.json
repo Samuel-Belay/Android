@@ -1,7 +1,7 @@
 {
     "name": "Android XFCE DevContainer",
     "build": {
-        "dockerfile": "Dockerfile-with-features",
+        "dockerfile": "Dockerfile",
         "args": {
             "USERNAME": "vscode",
             "USER_UID": "1000",
