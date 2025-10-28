@@ -4,6 +4,9 @@
         "dockerfile": "Dockerfile",
         "context": "."
     },
+    "mounts": [
+    "source=/home/${localEnv:USER}/AndroidSDK,target=/opt/android-sdk,type=bind"
+    ],
     "runArgs": [
         "--privileged",
         "--network=host",
