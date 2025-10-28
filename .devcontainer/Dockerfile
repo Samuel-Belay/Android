@@ -1,4 +1,16 @@
+# Use Ubuntu 22.04 as base
 FROM ubuntu:22.04
+
+# Set non-interactive and locale
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV TZ=Europe/London
+
+# Android SDK location
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+ENV ANDROID_AVD_HOME=$ANDROID_SDK_ROOT/.android/avd
+ENV ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -6,41 +18,34 @@ RUN apt-get update && apt-get install -y \
     xvfb x11vnc net-tools lsof socat && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables
-ENV ANDROID_HOME=/opt/android-sdk
-ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-
-WORKDIR /opt/android-sdk
-
-# Download Android command line tools
+# Download and unzip command line tools
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
-    mkdir -p cmdline-tools/latest && \
-    unzip cmdline-tools.zip -d cmdline-tools/latest && \
+    mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest && \
+    unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest && \
     rm cmdline-tools.zip
 
-# Accept licenses & install SDK components
+# Accept licenses and install SDK components
 RUN yes | sdkmanager --licenses && \
     sdkmanager "platform-tools" \
                "platforms;android-33" \
                "system-images;android-33;google_apis;x86_64" \
                "emulator"
 
-ENV ANDROID_AVD_HOME=/opt/android-sdk/.android/avd
+# Create Pixel 6 AVD fully non-interactive
+RUN mkdir -p $ANDROID_AVD_HOME && \
+    echo no | avdmanager create avd \
+        --name pixel6 \
+        --package "system-images;android-33;google_apis;x86_64" \
+        --device "pixel_6" \
+        --abi x86_64 \
+        --force
 
-ENV ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
-ENV LANG=C.UTF-8
-ENV TZ=Europe/London
-
-RUN avdmanager create avd \
-    --name pixel6 \
-    --package "system-images;android-33;google_apis;x86_64" \
-    --device "pixel_6" \
-    --abi x86_64 \
-    --force
-    
 # Copy startup script
 COPY start-android.sh /usr/local/bin/start-android.sh
 RUN chmod +x /usr/local/bin/start-android.sh
 
-# Run emulator automatically
+# Expose VNC port
+EXPOSE 5901
+
+# Default entrypoint
 CMD ["/usr/local/bin/start-android.sh"]
