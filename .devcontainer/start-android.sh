@@ -1,10 +1,11 @@
 #!/bin/bash
+# Start virtual display for emulator
+Xvfb :1 -screen 0 1920x1080x24 &
 
-# Start Xvfb for headless display
-Xvfb :0 -screen 0 1280x720x16 &
+export DISPLAY=:1
 
-# Start Android emulator in headless mode
-emulator -avd pixel6 -no-window -no-audio -gpu swiftshader_indirect &
+# Start emulator in the background
+$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -no-audio -no-window &
 
 echo "=== Emulator started! Connect via port 5901 ==="
 
