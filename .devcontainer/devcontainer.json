@@ -1,17 +1,11 @@
 {
-    "name": "Android GUI Container",
-    "build": {
-        "dockerfile": "Dockerfile",
-        "context": "."
-    },
-    "forwardPorts": [5901],
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-vscode.cpptools",
-                "ms-python.python"
-            ]
-        }
-    },
-    "remoteUser": "vscode"
+  "name": "Android VM DevContainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/.android,target=/workspace/.android,type=bind"
+  ],
+  "forwardPorts": [5901],
+  "remoteUser": "vscode"
 }
