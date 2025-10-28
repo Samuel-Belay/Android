@@ -1,32 +1,29 @@
-# Use Ubuntu 22.04
+# Use Ubuntu 22.04 as base
 FROM ubuntu:22.04
 
-# Arguments for Codespaces user
+# Create vscode user (Codespaces expects UID 1000)
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Create user and sudo
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd -m -s /bin/bash --uid $USER_UID --gid $USER_GID $USERNAME \
+    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
     && apt-get update && apt-get install -y sudo \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Avoid interactive prompts
+# Avoid prompts during install
 ENV DEBIAN_FRONTEND=noninteractive
-
-# Android SDK environment
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH
+ENV ANDROID_AVD_HOME=/workspace/.android/avd  # Mounted volume
 
-# Install dependencies
+# ---------- Install dependencies ----------
 RUN apt-get update && apt-get install -y \
     wget unzip curl git openjdk-11-jdk python3 python3-pip \
-    xvfb x11vnc net-tools lsof socat \
-    xfce4 xfce4-goodies dbus-x11 x11-xserver-utils \
+    xvfb x11vnc net-tools lsof socat mesa-utils libgl1-mesa-dri \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Download Android command line tools
+# ---------- Download Android command line tools ----------
 RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest && \
     wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
     unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest && \
@@ -34,24 +31,21 @@ RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest && \
     rm -rf $ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools && \
     rm cmdline-tools.zip
 
-# Accept licenses and install SDK packages
+# ---------- Accept licenses and install SDK packages ----------
 RUN yes | sdkmanager --licenses && \
     sdkmanager "platform-tools" \
                "platforms;android-33" \
-               "system-images;android-33;google_apis;x86_64" \
+               "system-images;android-33;google_apis;x86" \
                "emulator"
 
-# Create Pixel 6 AVD as vscode user
+# ---------- Ensure AVD directory exists ----------
+RUN mkdir -p $ANDROID_AVD_HOME && chown -R $USERNAME:$USERNAME $ANDROID_AVD_HOME
+
+# Switch to vscode user
 USER $USERNAME
-RUN mkdir -p /home/$USERNAME/.android/avd && \
-    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6" --force
-
-# Copy startup script
-COPY start-android.sh /usr/local/bin/start-android.sh
-RUN chmod +x /usr/local/bin/start-android.sh
-
-# Default working directory
 WORKDIR /workspace
 
-# Default command
-CMD ["/usr/local/bin/start-android.sh"]
+# ---------- Startup script ----------
+COPY start-android.sh /usr/local/bin/start-android.sh
+RUN chmod +x /usr/local/bin/start-android.sh
+ENTRYPOINT ["/usr/local/bin/start-android.sh"]
