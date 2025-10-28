@@ -1,31 +1,16 @@
 {
-  "name": "Android Emulator DevContainer",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".",
-    "args": {
-      "USERNAME": "vscode",
-      "USER_UID": "1000",
-      "USER_GID": "1000"
-    }
-  },
-  "runArgs": [
-    "--cap-add=SYS_ADMIN",
-    "--device=/dev/kvm",
-    "--shm-size=2g"
-  ],
-  "forwardPorts": [5900],
-  "remoteUser": "vscode",
-  "workspaceFolder": "/workspace",
-  "features": {},
-  "postCreateCommand": "echo 'Devcontainer ready! Connect VNC to localhost:5900'",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-vscode.cpptools",
-        "ms-python.python",
-        "ms-vscode.remote-repositories"
-      ]
-    }
-  }
+    "name": "Android GUI DevContainer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+    "runArgs": [
+        "--privileged",
+        "--network=host",
+        "-e", "DISPLAY=:1",
+        "-p", "5901:5901"
+    ],
+    "workspaceFolder": "/workspace",
+    "remoteUser": "vscode",
+    "postStartCommand": "/usr/local/bin/start-android.sh"
 }
