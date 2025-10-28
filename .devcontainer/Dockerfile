@@ -16,7 +16,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH
-
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # ---------------------- Install dependencies ----------------------
@@ -26,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     mesa-utils pulseaudio \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ---------------------- Download Android command line tools ----------------------
+# ---------------------- Android command line tools ----------------------
 RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest \
     && wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip \
     && unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest \
