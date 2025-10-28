@@ -1,26 +1,30 @@
 #!/bin/bash
 set -e
 
-# Start XFCE desktop in a virtual framebuffer
-echo "Starting XFCE on display :1..."
-Xvfb :1 -screen 0 1280x720x24 &
+# ------------------ Start XFCE + VNC ------------------
+echo "Starting XFCE + VNC..."
+mkdir -p ~/.vnc
+x11vnc -storepasswd 1234 ~/.vnc/passwd
+Xvfb :1 -screen 0 1920x1080x24 &
+sleep 2
+startxfce4 &
 
-# Start a VNC server on top of the Xvfb display
-echo "Starting VNC server on port 5901..."
-x11vnc -display :1 -forever -nopw -shared &
+# ------------------ PulseAudio ------------------
+pulseaudio --start
 
-# Give XFCE + VNC a moment to start
-sleep 5
+# ------------------ Create AVD if not exists ------------------
+AVD_NAME=pixel6
+if [ ! -d "$HOME/.android/avd/${AVD_NAME}.avd" ]; then
+    echo "Creating Android AVD: $AVD_NAME"
+    mkdir -p $HOME/.android/avd
+    echo "no" | avdmanager create avd -n $AVD_NAME -k "system-images;android-33;google_apis;x86_64" -d "pixel_6"
+fi
 
-# Start the Android emulator
-echo "Starting Android Emulator..."
-export ANDROID_AVD_HOME=/home/vscode/.android/avd
-export PATH=$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools:$PATH
+# ------------------ Launch emulator ------------------
+echo "Starting Android emulator: $AVD_NAME"
+emulator -avd $AVD_NAME -no-snapshot-load -no-audio -gpu swiftshader_indirect &
 
-# Launch emulator with GPU acceleration
-emulator -avd pixel6 -no-snapshot -gpu host -no-window=false -camera-back none -camera-front none -verbose &
+echo "=== Emulator started! Connect via VNC on port 5901 (password: 1234) ==="
 
-echo "=== Emulator started! Connect via VNC on port 5901 ==="
-
-# Keep container alive
+# ------------------ Keep container alive ------------------
 tail -f /dev/null
