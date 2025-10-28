@@ -27,6 +27,10 @@ RUN yes | sdkmanager --licenses && \
 
 ENV ANDROID_AVD_HOME=/opt/android-sdk/.android/avd
 
+ENV ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
+ENV LANG=C.UTF-8
+ENV TZ=Europe/London
+
 RUN avdmanager create avd \
     --name pixel6 \
     --package "system-images;android-33;google_apis;x86_64" \
