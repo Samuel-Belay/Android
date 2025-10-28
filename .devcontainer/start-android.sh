@@ -1,22 +1,15 @@
 #!/bin/bash
-echo "=== Starting XFCE desktop + VNC server ==="
+# ---------------------- Start VNC server ----------------------
+mkdir -p ~/.vnc
+Xvfb :0 -screen 0 1280x720x24 &
+export DISPLAY=:0
 
-export DISPLAY=:1
-sudo dbus-uuidgen --ensure
-Xvfb :1 -screen 0 1920x1080x24 &
-sleep 2
+x11vnc -forever -usepw -display :0 -shared &
 
-xfce4-session &
-sleep 2
+# ---------------------- Start Android emulator ----------------------
+$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu host -no-snapshot-load &
 
-x11vnc -display :1 -nopw -forever -shared &
-sleep 2
+echo "=== Emulator + VNC started! Connect via VNC port 5900 ==="
 
-echo "=== VNC server running on port 5901 ==="
-
-echo "=== Starting Android Emulator: pixel6 ==="
-$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu host -no-snapshot-save &
-
-echo "=== Android Studio ready! Launch with 'studio.sh' inside container ==="
-
+# Keep container alive
 tail -f /dev/null
