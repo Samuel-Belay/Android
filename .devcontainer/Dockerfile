@@ -1,7 +1,7 @@
 # Use Ubuntu 22.04 as base
 FROM ubuntu:22.04
 
-# Create vscode user (UID/GID Codespaces expects)
+# Create vscode user (Codespaces expects UID/GID)
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
@@ -15,8 +15,6 @@ RUN groupadd --gid $USER_GID $USERNAME \
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH
-ENV ANDROID_AVD_HOME=/home/vscode/.android/avd
-ENV HOME=/home/vscode
 
 # ---------- Install dependencies ----------
 RUN apt-get update && apt-get install -y \
@@ -33,7 +31,6 @@ RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest && \
     rm cmdline-tools.zip
 
 # ---------- Accept licenses and install SDK packages ----------
-USER $USERNAME
 RUN yes | sdkmanager --licenses && \
     sdkmanager "platform-tools" \
                "platforms;android-33" \
@@ -41,8 +38,8 @@ RUN yes | sdkmanager --licenses && \
                "emulator"
 
 # ---------- Create Pixel 6 AVD ----------
-RUN mkdir -p $ANDROID_AVD_HOME && \
-    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6"
+RUN mkdir -p /home/vscode/.android/avd && \
+    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6" || true
 
 # ---------- Copy startup script ----------
 COPY start-android.sh /usr/local/bin/start-android.sh
@@ -51,5 +48,5 @@ RUN chmod +x /usr/local/bin/start-android.sh
 # ---------- Default workdir ----------
 WORKDIR /workspace
 
-# ---------- Set container entrypoint ----------
-ENTRYPOINT ["/usr/local/bin/start-android.sh"]
+# Switch to vscode user
+USER $USERNAME
