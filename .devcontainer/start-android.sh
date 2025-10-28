@@ -1,25 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-echo "=== Setting up Android Emulator ==="
+# Start virtual framebuffer (for GUI apps)
+Xvfb :1 -screen 0 1920x1080x24 &
+export DISPLAY=:1
 
-# Start the virtual framebuffer for GUI
-Xvfb :0 -screen 0 1920x1080x24 &
+# Start VNC server
+x11vnc -forever -usepw -create -display :1 &
 
-# Start VNC server for remote access
-x11vnc -display :0 -nopw -listen localhost -xkb -ncache 10 -forever &
+# Launch emulator in background
+emulator -avd pixel6 -no-snapshot -gpu swiftshader_indirect -no-audio -no-window &
 
-# Start the Android emulator (Pixel 6)
-echo "Starting Pixel 6 emulator..."
-$ANDROID_HOME/emulator/emulator -avd pixel6 \
-    -no-audio -no-snapshot \
-    -gpu swiftshader_indirect \
-    -accel off \
-    -no-boot-anim \
-    -memory 4096 -partition-size 8192 &
+echo "=== Emulator started! Connect via port 5901 ==="
 
-echo "Emulator is booting up..."
-sleep 30
-
-echo "Emulator running! Connect via Codespace Port 5901 (VNC)"
+# Keep container alive
 tail -f /dev/null
