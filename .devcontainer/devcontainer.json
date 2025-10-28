@@ -1,19 +1,49 @@
 {
-    "name": "Android GUI DevContainer",
+    "name": "Android XFCE DevContainer",
     "build": {
-        "dockerfile": "Dockerfile",
-        "context": "."
+        "dockerfile": "Dockerfile-with-features",
+        "args": {
+            "USERNAME": "vscode",
+            "USER_UID": "1000",
+            "USER_GID": "1000"
+        }
     },
-    "mounts": [
-    "source=/home/${localEnv:USER}/AndroidSDK,target=/opt/android-sdk,type=bind"
-    ],
     "runArgs": [
-        "--privileged",
-        "--network=host",
-        "-e", "DISPLAY=:1",
-        "-p", "5901:5901"
+        "--privileged",                  // Needed for emulator KVM acceleration
+        "-p", "5901:5901",               // VNC port
+        "--mount", "type=bind,source=${localEnv:HOME}/AndroidSDK,target=/opt/android-sdk" // SDK mount
     ],
     "workspaceFolder": "/workspace",
     "remoteUser": "vscode",
-    "postStartCommand": "/usr/local/bin/start-android.sh"
+    "postStartCommand": "/usr/local/bin/start-android.sh",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {}
+    },
+    "mounts": [
+        "source=${localEnv:HOME}/AndroidSDK,target=/opt/android-sdk,type=bind"
+    ],
+    "portsAttributes": {
+        "5901": {
+            "label": "VNC Viewer",
+            "onAutoForward": "openBrowser"
+        }
+    },
+    "containerEnv": {
+        "DISPLAY": ":1",
+        "ANDROID_SDK_ROOT": "/opt/android-sdk",
+        "PATH": "/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:${PATH}"
+    },
+    "remoteEnv": {
+        "DISPLAY": ":1"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "msjsdiag.debugger-for-chrome",
+                "vscjava.vscode-java-pack"
+            ]
+        }
+    }
 }
