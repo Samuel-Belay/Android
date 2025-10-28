@@ -10,11 +10,13 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
     && apt-get update && apt-get install -y sudo \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-    
+
 # Avoid prompts during install
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH
+ENV ANDROID_AVD_HOME=/home/vscode/.android/avd
+ENV HOME=/home/vscode
 
 # ---------- Install dependencies ----------
 RUN apt-get update && apt-get install -y \
@@ -31,6 +33,7 @@ RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest && \
     rm cmdline-tools.zip
 
 # ---------- Accept licenses and install SDK packages ----------
+USER $USERNAME
 RUN yes | sdkmanager --licenses && \
     sdkmanager "platform-tools" \
                "platforms;android-33" \
@@ -38,7 +41,8 @@ RUN yes | sdkmanager --licenses && \
                "emulator"
 
 # ---------- Create Pixel 6 AVD ----------
-RUN echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6"
+RUN mkdir -p $ANDROID_AVD_HOME && \
+    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis;x86_64" -d "pixel_6"
 
 # ---------- Copy startup script ----------
 COPY start-android.sh /usr/local/bin/start-android.sh
@@ -46,3 +50,6 @@ RUN chmod +x /usr/local/bin/start-android.sh
 
 # ---------- Default workdir ----------
 WORKDIR /workspace
+
+# ---------- Set container entrypoint ----------
+ENTRYPOINT ["/usr/local/bin/start-android.sh"]
