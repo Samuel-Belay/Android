@@ -1,19 +1,17 @@
 {
-    "name": "Android Pixel 6 Codespace",
+    "name": "Android GUI Container",
     "build": {
         "dockerfile": "Dockerfile",
         "context": "."
     },
+    "forwardPorts": [5901],
     "customizations": {
         "vscode": {
             "extensions": [
-                "vscode.android-emulator",
                 "ms-vscode.cpptools",
-                "ms-vscode.vscode-java-pack"
+                "ms-python.python"
             ]
         }
     },
-    "remoteUser": "vscode",
-    "postStartCommand": "/usr/local/bin/start-android.sh",
-    "forwardPorts": [5901]
+    "remoteUser": "vscode"
 }
