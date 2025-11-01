@@ -1,9 +1,10 @@
 #!/bin/bash
+# Downloads and installs Android command line tools
 set -e
 
-mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+SDK_DIR=/opt/android-sdk/cmdline-tools/latest
+TMP_ZIP=/tmp/cmdline-tools.zip
 
-cd /tmp
-wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest
-rm cmdline-tools.zip
+wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O $TMP_ZIP
+unzip -q $TMP_ZIP -d $SDK_DIR
+rm -f $TMP_ZIP
