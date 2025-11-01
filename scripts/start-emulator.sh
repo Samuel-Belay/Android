@@ -1,17 +1,14 @@
 #!/bin/bash
-echo "=== Starting XFCE + Android Emulator ==="
-# Start virtual framebuffer
-Xvfb :0 -screen 0 1920x1080x24 &
-export DISPLAY=:0
-
-# Start XFCE session in background
-startxfce4 &
+# Start Xvfb
+Xvfb :1 -screen 0 1280x720x16 &
+sleep 2
 
 # Start VNC server
-x11vnc -display :0 -forever -nopw &
+x11vnc -display :1 -nopw -forever &
 
-# Start Android emulator GUI
-emulator -avd pixel6 -no-snapshot-load -gpu swiftshader_indirect -no-audio &
+# Start Android Emulator
+$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -gpu swiftshader_indirect &
+echo "=== Emulator started! Connect via VNC port 5901 ==="
 
-echo "=== Emulator running! Connect via VNC port 5901 ==="
+# Keep container alive
 tail -f /dev/null
