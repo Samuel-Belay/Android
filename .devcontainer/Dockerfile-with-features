@@ -1,11 +1,12 @@
-# ----------------------------
-# Base image
-# ----------------------------
+# ---------- Base Image ----------
 FROM ubuntu:22.04
 
-# ----------------------------
-# Create vscode user and basic setup
-# ----------------------------
+# ---------- Environment ----------
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ---------- Create user ----------
 RUN groupadd --gid 1000 vscode \
     && useradd -m -s /bin/bash --uid 1000 --gid 1000 vscode \
     && apt-get update && apt-get install -y sudo \
@@ -14,61 +15,33 @@ RUN groupadd --gid 1000 vscode \
 USER vscode
 WORKDIR /home/vscode
 
-# ----------------------------
-# Install dependencies
-# ----------------------------
+# ---------- Install dependencies ----------
 RUN sudo apt-get update && sudo apt-get install -y \
     wget unzip curl git openjdk-11-jdk python3 python3-pip \
     xfce4 xfce4-session x11vnc xvfb socat lsof net-tools \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ----------------------------
-# Android SDK setup (persistent)
-# ----------------------------
-ENV ANDROID_SDK_ROOT=/opt/android-sdk
+# ---------- Copy scripts ----------
+COPY scripts /scripts
+RUN chmod +x /scripts/*.sh
 
-# Make directories for persistent mounting
-RUN sudo mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest \
-    && sudo mkdir -p /home/vscode/.android/avd
+# ---------- Download SDK ----------
+RUN /scripts/download-sdk.sh
 
-# Download command line tools only if not present
-COPY scripts/download-sdk.sh /scripts/download-sdk.sh
-RUN chmod +x /scripts/download-sdk.sh && /scripts/download-sdk.sh
-
-# Add SDK tools to PATH
-ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-
-# ----------------------------
-# Accept licenses
-# ----------------------------
+# ---------- Accept SDK licenses ----------
 RUN yes | sdkmanager --licenses
 
-# ----------------------------
-# Install required SDK packages
-# ----------------------------
+# ---------- Install platform tools & system images ----------
 RUN sdkmanager "platform-tools" \
                "platforms;android-33" \
                "system-images;android-33;google_apis_playstore;x86_64" \
                "emulator" \
     && rm -rf $ANDROID_SDK_ROOT/.android/cache
 
-# ----------------------------
-# Create AVD (non-interactive)
-# ----------------------------
-RUN echo "no" | avdmanager create avd \
-       -n pixel6 \
-       -k "system-images;android-33;google_apis_playstore;x86_64" \
-       -d "pixel_6" \
-       --force \
-       --sdcard 512M
+# ---------- Create AVD ----------
+RUN mkdir -p /home/vscode/.android/avd \
+    && echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis_playstore;x86_64" -d "pixel_6"
 
-# ----------------------------
-# Copy start script
-# ----------------------------
-COPY start-android.sh /usr/local/bin/start-android.sh
-RUN chmod +x /usr/local/bin/start-android.sh
-
-# ----------------------------
-# Default entry point
-# ----------------------------
-ENTRYPOINT ["/usr/local/bin/start-android.sh"]
+# ---------- Startup script ----------
+RUN sudo chmod +x /scripts/start-android.sh
+ENTRYPOINT ["/scripts/start-android.sh"]
