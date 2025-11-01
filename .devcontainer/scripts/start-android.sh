@@ -1,12 +1,13 @@
 #!/bin/bash
+# Start Android emulator in headless mode
 set -e
 
-# Start virtual framebuffer for GUI
-Xvfb :1 -screen 0 1920x1080x24 &
+# Start Xvfb for headless GUI
+Xvfb :1 -screen 0 1080x1920x24 &
 export DISPLAY=:1
 
 # Start VNC server
-x11vnc -display :1 -forever -shared -nopw &
+x11vnc -display :1 -forever -nopw -shared &
 
-# Start Android emulator
-$ANDROID_SDK_ROOT/emulator/emulator -avd pixel6 -no-snapshot-load -gpu swiftshader_indirect -no-audio
+# Start emulator
+~/Android/Sdk/emulator/emulator -avd pixel6 -no-snapshot-load -no-window -gpu swiftshader_indirect
