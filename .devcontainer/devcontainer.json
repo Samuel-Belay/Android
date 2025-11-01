@@ -1,23 +1,17 @@
 {
-  "name": "Android Emulator Codespace",
-  "dockerFile": "Dockerfile",
+  "name": "Android DevContainer",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "runArgs": [
-    "--shm-size=2g",
-    "--device=/dev/kvm"
+    "--privileged",
+    "-p", "5901:5901",               // VNC port
+    "-v", "${localWorkspaceFolder}/AndroidSDK:/opt/android-sdk",
+    "-v", "${localWorkspaceFolder}/.android:/home/vscode/.android"
   ],
-  "mounts": [
-    "source=${localWorkspaceFolder}/.android,target=/root/.android,type=bind",
-    "source=${localWorkspaceFolder}/AndroidSDK,target=/opt/android-sdk,type=bind"
-  ],
-  "forwardPorts": [5901],
-  "postCreateCommand": "bash /scripts/start-emulator.sh",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-vscode.cpptools",
-        "ms-python.python",
-        "formulahendry.code-runner"
-      ]
-    }
-  }
+  "workspaceFolder": "/workspace",
+  "remoteUser": "vscode",
+  "features": {},
+  "postStartCommand": "/scripts/start-emulator.sh"
 }
