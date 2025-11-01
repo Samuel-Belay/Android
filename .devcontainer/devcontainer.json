@@ -1,14 +1,13 @@
 {
     "name": "Android Codespace",
-    "dockerFile": "Dockerfile-with-features",
-    "runArgs": [
-        "--mount", "type=volume,source=android-sdk,target=/opt/android-sdk",
-        "--mount", "type=volume,source=android-avd,target=/home/vscode/.android/avd"
-    ],
-    "workspaceFolder": "/home/vscode/workspace",
-    "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
+    "build": {
+        "dockerfile": "Dockerfile-with-features",
+        "context": "."
     },
-    "postCreateCommand": "echo 'Android environment ready!'",
+    "runArgs": ["--privileged"],
+    "mounts": [
+        "source=android-sdk,target=/opt/android-sdk,type=volume",
+        "source=android-avd,target=/home/vscode/.android/avd,type=volume"
+    ],
     "remoteUser": "vscode"
 }
