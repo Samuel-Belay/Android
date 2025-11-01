@@ -4,7 +4,6 @@
         "dockerfile": "Dockerfile-with-features",
         "context": "."
     },
-    "runArgs": ["--privileged"],
     "mounts": [
         "source=android-sdk,target=/opt/android-sdk,type=volume",
         "source=android-avd,target=/home/vscode/.android/avd,type=volume"
