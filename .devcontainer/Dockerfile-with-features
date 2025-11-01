@@ -23,19 +23,23 @@ RUN sudo apt-get update && sudo apt-get install -y \
     && sudo apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ----------------------------
-# Install Android SDK command line tools
+# Android SDK setup (persistent)
 # ----------------------------
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
-RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest \
-    && wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip \
-    && unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest \
-    && rm cmdline-tools.zip
+
+# Make directories for persistent mounting
+RUN sudo mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest \
+    && sudo mkdir -p /home/vscode/.android/avd
+
+# Download command line tools only if not present
+COPY scripts/download-sdk.sh /scripts/download-sdk.sh
+RUN chmod +x /scripts/download-sdk.sh && /scripts/download-sdk.sh
 
 # Add SDK tools to PATH
 ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
 # ----------------------------
-# Accept licenses (non-interactive)
+# Accept licenses
 # ----------------------------
 RUN yes | sdkmanager --licenses
 
@@ -51,8 +55,7 @@ RUN sdkmanager "platform-tools" \
 # ----------------------------
 # Create AVD (non-interactive)
 # ----------------------------
-RUN mkdir -p /home/vscode/.android/avd \
-    && echo "no" | avdmanager create avd \
+RUN echo "no" | avdmanager create avd \
        -n pixel6 \
        -k "system-images;android-33;google_apis_playstore;x86_64" \
        -d "pixel_6" \
