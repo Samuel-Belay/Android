@@ -1,37 +1,44 @@
+# Base image
 FROM ubuntu:22.04
 
+# Create vscode user
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update && apt-get install -y sudo \
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
 ENV DEBIAN_FRONTEND=noninteractive
-ENV ANDROID_HOME=/opt/android-sdk
-ENV PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$PATH
 
-# --- Base tools ---
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    xfce4 xfce4-goodies tightvncserver xterm wget unzip openjdk-17-jdk \
-    libvirt-daemon-system qemu-kvm libglu1-mesa mesa-utils && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    wget unzip curl git openjdk-11-jdk python3 python3-pip \
+    xfce4 xfce4-terminal x11vnc xvfb net-tools socat lsof \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# --- Android SDK setup ---
-RUN mkdir -p $ANDROID_HOME/cmdline-tools && cd $ANDROID_HOME/cmdline-tools && \
-    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip && \
-    unzip tools.zip && rm tools.zip && mv cmdline-tools latest
+# Download Android SDK tools
+RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
+    unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest && \
+    rm cmdline-tools.zip
 
-# --- Accept licenses & install required components ---
-RUN yes | sdkmanager --licenses || true && \
+# Accept licenses and install SDK packages
+RUN yes | sdkmanager --licenses >/dev/null 2>&1 && \
     sdkmanager "platform-tools" \
-               "emulator" \
-               "platforms;android-34" \
-               "system-images;android-34;google_apis_playstore;x86_64"
+               "platforms;android-33" \
+               "system-images;android-33;google_apis_playstore;x86_64" \
+               "emulator"
 
-# --- Create Play Store compatible AVD ---
-RUN echo "no" | avdmanager create avd -n play_avd -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel"
+# Create AVD
+RUN mkdir -p /home/vscode/.android/avd && \
+    echo "no" | avdmanager create avd -n pixel6 -k "system-images;android-33;google_apis_playstore;x86_64" -d "pixel_6"
 
-# --- VNC setup ---
-RUN mkdir -p /root/.vnc && \
-    echo "android" | vncpasswd -f > /root/.vnc/passwd && chmod 600 /root/.vnc/passwd
-
-# --- Copy scripts ---
+# Copy start script
 COPY scripts /scripts
 RUN chmod +x /scripts/*.sh
 
-EXPOSE 5901
-CMD ["/scripts/start-emulator.sh"]
+WORKDIR /workspace
