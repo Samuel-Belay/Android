@@ -1,17 +1,14 @@
 {
-  "name": "Android DevContainer",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".",
-    "args": {
-      "USERNAME": "vscode"
-    }
-  },
-  "runArgs": [
-    "--mount", "type=volume,source=AndroidSDK,target=/opt/android-sdk",
-    "--mount", "type=volume,source=AndroidAVD,target=/home/vscode/.android"
-  ],
-  "remoteUser": "vscode",
-  "workspaceFolder": "/workspace",
-  "postStartCommand": "/usr/local/bin/start-android.sh"
+    "name": "Android Codespace",
+    "dockerFile": "Dockerfile-with-features",
+    "runArgs": [
+        "--mount", "type=volume,source=android-sdk,target=/opt/android-sdk",
+        "--mount", "type=volume,source=android-avd,target=/home/vscode/.android/avd"
+    ],
+    "workspaceFolder": "/home/vscode/workspace",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "postCreateCommand": "echo 'Android environment ready!'",
+    "remoteUser": "vscode"
 }
